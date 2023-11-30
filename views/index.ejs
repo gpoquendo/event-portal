@@ -1,0 +1,56 @@
+<!-- views/index.ejs -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://stackpath.bootstrapcdn.com;">
+    <title>Event Management System</title>
+    <!-- Add Bootstrap CSS link -->
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+      crossorigin="anonymous"
+    />
+  </head>
+  <body>
+    <div class="container mt-4">
+      <h1>Community Event Management System</h1>
+      <br>
+      <h2>Events List</h2>
+      <ul class="list-group">
+        <% events.forEach(event => { %>
+          <li class="list-group-item">
+            <div class="row">
+              <!-- First Column: Event Name -->
+              <div class="col-md-6">
+                <%= event.name %>
+              </div>
+              <!-- Second Column: Event Date and Buttons -->
+              <div class="col-md-6">
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <%= event.date.toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'long', day: 'numeric' }) %>
+                  </div>
+                  <div>
+                    <a href="/events/<%= event.id %>" class="btn btn-primary btn-sm">View</a>
+                    <a href="/events/<%= event.id %>/edit" class="btn btn-warning btn-sm ml-2">Edit</a>
+                    <form method="POST" action="/events/<%= event.id %>?_method=DELETE" style="display: inline">
+                      <button type="submit" class="btn btn-danger btn-sm ml-2">Delete</button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </li>
+        <% }); %>
+      </ul>
+      <br>
+      <a href="/events/new" class="btn btn-success mt-2">Add Event</a>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+  </body>
+</html>
