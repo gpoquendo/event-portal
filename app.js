@@ -114,12 +114,14 @@ app.post('/events', upload.single('eventImage'), (req, res) => {
           sendEmail(creatorEmail, subject, html);
 
           // Send notification emails to additional attendees
-          const additionalAttendees = req.body.additionalAttendees; // Assuming you have a field in the form for additional attendees
-          if (additionalAttendees && Array.isArray(additionalAttendees)) {
-            additionalAttendees.forEach((attendeeEmail) => {
+          const additionalAttendees = req.body.additionalAttendees;
+          const attendeesArray = additionalAttendees.split(',').map(item => item.trim());
+          
+          if (attendeesArray && Array.isArray(attendeesArray)) {
+            attendeesArray.forEach((attendeeEmail) => {
               const subjectAttendee = `Event Invitation: ${eventName}`;
               const htmlAttendee = `You have been invited to the event "${eventName}".`;
-
+              console.log(attendeeEmail + ", ");
               sendEmail(attendeeEmail, subjectAttendee, htmlAttendee);
             });
           }
@@ -168,13 +170,15 @@ app.post('/events/:id/send-email', (req, res) => {
   const eventName = '...'; // Get the event name from the database or req object
 
   const additionalAttendees = req.body.additionalAttendees;
-  if (additionalAttendees && Array.isArray(additionalAttendees)) {
-    additionalAttendees.forEach((attendeeEmail) => {
+  const attendeesArray = additionalAttendees.split(',').map(item => item.trim());
+
+  if (attendeesArray && Array.isArray(attendeesArray)) {
+    attendeesArray.forEach((attendeeEmail) => {
       const subjectAttendee = `Event Invitation: ${eventName}`;
       const htmlAttendee = `You have been invited to the event "${eventName}".`;
 
-      // Uncomment the line below to send the email
       sendEmail(attendeeEmail, subjectAttendee, htmlAttendee);
+      alert("emails sent!");
     });
   }
 
