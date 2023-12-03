@@ -16,6 +16,7 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(methodOverride('_method'));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 const storage = multer.diskStorage({
   destination: 'uploads/',
@@ -28,12 +29,17 @@ const upload = multer({ storage });
 
 const transporter = nodemailer.createTransport(config.nodemailer);
 
-const sendEmail = (to, subject, html) => {
+const sendEmail = (to, subject, html, attachmentPath) => {
   const mailOptions = {
     from: 'gpoquendo4@gmail.com',
     to,
     subject,
     html,
+    attachments: [
+      {
+        path: attachmentPath
+      }
+    ]
   };
 
   transporter.sendMail(mailOptions, (error, info) => {
@@ -55,8 +61,6 @@ connection.connect(err => {
     console.log('Connected to MySQL database');
   }
 });
-
-app.use(express.static('uploads'));
 
 // Read - Display a list of events on the landing page
 app.get('/', (req, res) => {
@@ -80,6 +84,7 @@ app.get('/events/new', (req, res) => {
 app.post('/events', upload.single('eventImage'), (req, res) => {
   const { name, date, time, location, description } = req.body;
   const eventImage = req.file ? req.file.filename : null;
+  const imagePath = path.join(__dirname, 'uploads', eventImage);
 
   connection.query(
     'INSERT INTO events (name, date, time, location, description) VALUES (?, ?, ?, ?, ?)',
@@ -109,13 +114,12 @@ app.post('/events', upload.single('eventImage'), (req, res) => {
           const creatorEmail = 'gpoquendo4@gmail.com'; // Use the email of the event creator or replace with a variable
 
           const subject = `Event Created: ${eventName}`;
-          const html = `Congratulations! You have successfully created the event "${eventName}".
-            Date: ${req.body.date}
-            Time: ${req.body.location}
-            Description: ${req.body.description}
-            ${eventImage}`;
+          const html = `Congratulations! You have successfully created the event "${eventName}".<br><br>
+            Date: ${req.body.date}<br>
+            Time: ${req.body.location}<br>
+            Description: ${req.body.description}`;
 
-          sendEmail(creatorEmail, subject, html);
+          sendEmail(creatorEmail, subject, html, imagePath);
 
           // Send notification emails to additional attendees
           const additionalAttendees = req.body.additionalAttendees;
@@ -127,11 +131,10 @@ app.post('/events', upload.single('eventImage'), (req, res) => {
               const htmlAttendee = `You have been invited to the event "${eventName}".<br><br>
               Date: ${req.body.date}<br>
               Time: ${req.body.location}<br>
-              Description: ${req.body.description}<br>
-              ${eventImage}`;
+              Description: ${req.body.description}<br>`;
 
               //console.log(attendeeEmail + ", ");
-              sendEmail(attendeeEmail, subjectAttendee, htmlAttendee);
+              sendEmail(attendeeEmail, subjectAttendee, htmlAttendee, imagePath);
             });
           }
 
@@ -182,6 +185,12 @@ app.post('/events/:id/send-email', async (req, res) => {
 
     // Get the event data from the query results
     const event = results[0];
+    if (!event) {
+      res.status(404).send('Event not found');
+      return;
+    }
+
+    
 
     const eventName = event.name;
     const eventDate = event.date;
@@ -215,7 +224,6 @@ app.post('/events/:id/send-email', async (req, res) => {
     res.redirect(`/events/${eventId}`);
   });
 });
-
 
 // Update - Show the form to edit an existing event
 app.get('/events/:id/edit', (req, res) => {
