@@ -109,19 +109,28 @@ app.post('/events', upload.single('eventImage'), (req, res) => {
           const creatorEmail = 'gpoquendo4@gmail.com'; // Use the email of the event creator or replace with a variable
 
           const subject = `Event Created: ${eventName}`;
-          const html = `Congratulations! You have successfully created the event "${eventName}".`;
+          const html = `Congratulations! You have successfully created the event "${eventName}".
+            Date: ${req.body.date}
+            Time: ${req.body.location}
+            Description: ${req.body.description}
+            ${eventImage}`;
 
           sendEmail(creatorEmail, subject, html);
 
           // Send notification emails to additional attendees
           const additionalAttendees = req.body.additionalAttendees;
           const attendeesArray = additionalAttendees.split(',').map(item => item.trim());
-          
+
           if (attendeesArray && Array.isArray(attendeesArray)) {
             attendeesArray.forEach((attendeeEmail) => {
               const subjectAttendee = `Event Invitation: ${eventName}`;
-              const htmlAttendee = `You have been invited to the event "${eventName}".`;
-              console.log(attendeeEmail + ", ");
+              const htmlAttendee = `You have been invited to the event "${eventName}".<br><br>
+              Date: ${req.body.date}<br>
+              Time: ${req.body.location}<br>
+              Description: ${req.body.description}<br>
+              ${eventImage}`;
+
+              //console.log(attendeeEmail + ", ");
               sendEmail(attendeeEmail, subjectAttendee, htmlAttendee);
             });
           }
@@ -165,25 +174,48 @@ app.get('/events/:id', (req, res) => {
   });
 });
 
-app.post('/events/:id/send-email', (req, res) => {
+app.post('/events/:id/send-email', async (req, res) => {
   const eventId = req.params.id;
-  const eventName = '...'; // Get the event name from the database or req object
 
-  const additionalAttendees = req.body.additionalAttendees;
-  const attendeesArray = additionalAttendees.split(',').map(item => item.trim());
+  connection.query('SELECT * FROM events WHERE id = ?', [eventId], (err, results) => {
+    if (err) throw err;
 
-  if (attendeesArray && Array.isArray(attendeesArray)) {
-    attendeesArray.forEach((attendeeEmail) => {
-      const subjectAttendee = `Event Invitation: ${eventName}`;
-      const htmlAttendee = `You have been invited to the event "${eventName}".`;
+    // Get the event data from the query results
+    const event = results[0];
 
-      sendEmail(attendeeEmail, subjectAttendee, htmlAttendee);
-      alert("emails sent!");
-    });
-  }
+    const eventName = event.name;
+    const eventDate = event.date;
+    const eventTime = event.time;
+    const eventLocation = event.location;
+    const eventDescription = event.description;
 
-  res.redirect(`/events/${eventId}`);
+    const additionalAttendees = req.body.additionalAttendees;
+
+    if (additionalAttendees) {
+      const attendeesArray = additionalAttendees.split(',').map(item => item.trim());
+
+      for (let attendeeEmail of attendeesArray) {
+        const subjectAttendee = `Event Invitation: ${eventName}`;
+        const htmlAttendee = `You have been invited to the event "${eventName}".<br><br>
+          Date: ${eventDate}<br>
+          Time: ${eventTime}<br>
+          Location: ${eventLocation}<br>
+          Description: ${eventDescription}`;
+
+        try {
+          sendEmail(attendeeEmail, subjectAttendee, htmlAttendee);
+        } catch (error) {
+          console.error(`Failed to send email to ${attendeeEmail}: ${error}`);
+        }
+      }
+
+      console.log("emails sent!");
+    }
+
+    res.redirect(`/events/${eventId}`);
+  });
 });
+
 
 // Update - Show the form to edit an existing event
 app.get('/events/:id/edit', (req, res) => {
