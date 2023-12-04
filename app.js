@@ -62,7 +62,6 @@ connection.connect(err => {
   }
 });
 
-// Read - Display a list of events on the landing page
 app.get('/', (req, res) => {
   connection.query('SELECT * FROM events', (err, results) => {
     if (err) {
@@ -75,12 +74,10 @@ app.get('/', (req, res) => {
   });
 });
 
-// Create - Show the form to add a new event
 app.get('/events/new', (req, res) => {
   res.render('new');
 });
 
-// Create - Handle the form submission for adding a new event
 app.post('/events', upload.single('eventImage'), (req, res) => {
   const { name, date, time, location, description } = req.body;
   const eventImage = req.file ? req.file.filename : null;
@@ -98,7 +95,6 @@ app.post('/events', upload.single('eventImage'), (req, res) => {
 
       const eventId = results.insertId;
 
-      // Insert the image file name into the event_images table
       connection.query(
         'INSERT INTO event_images (event_id, image) VALUES (?, ?)',
         [eventId, eventImage],
@@ -109,9 +105,8 @@ app.post('/events', upload.single('eventImage'), (req, res) => {
             return;
           }
 
-          // Send confirmation email to the event creator
           const eventName = req.body.name;
-          const creatorEmail = 'gpoquendo4@gmail.com'; // Use the email of the event creator or replace with a variable
+          const creatorEmail = 'gpoquendo4@gmail.com';
 
           const subject = `Event Created: ${eventName}`;
           const html = `Congratulations! You have successfully created the event "${eventName}".<br><br>
@@ -121,7 +116,6 @@ app.post('/events', upload.single('eventImage'), (req, res) => {
 
           sendEmail(creatorEmail, subject, html, imagePath);
 
-          // Send notification emails to additional attendees
           const additionalAttendees = req.body.additionalAttendees;
           const attendeesArray = additionalAttendees.split(',').map(item => item.trim());
 
@@ -133,7 +127,6 @@ app.post('/events', upload.single('eventImage'), (req, res) => {
               Time: ${req.body.location}<br>
               Description: ${req.body.description}<br>`;
 
-              //console.log(attendeeEmail + ", ");
               sendEmail(attendeeEmail, subjectAttendee, htmlAttendee, imagePath);
             });
           }
@@ -144,7 +137,6 @@ app.post('/events', upload.single('eventImage'), (req, res) => {
     });
 });
 
-// Read - Display details of a specific event
 app.get('/events/:id', (req, res) => {
   const eventId = req.params.id;
 
@@ -161,7 +153,6 @@ app.get('/events/:id', (req, res) => {
       return;
     }
 
-    // Fetch image information from the separate table
     connection.query('SELECT image FROM event_images WHERE event_id = ?', [eventId], (err, imageResults) => {
       if (err) {
         console.error('Error fetching image details:', err);
@@ -171,7 +162,6 @@ app.get('/events/:id', (req, res) => {
 
       const image = imageResults.length > 0 ? imageResults[0].image : null;
 
-      // Pass both event and image variables to the show view
       res.render('show', { event, image });
     });
   });
@@ -183,21 +173,17 @@ app.post('/events/:id/send-email', async (req, res) => {
   connection.query('SELECT * FROM events WHERE id = ?', [eventId], (err, results) => {
     if (err) throw err;
 
-    // Get the event data from the query results
     const event = results[0];
     if (!event) {
       res.status(404).send('Event not found');
       return;
     }
 
-    
-
     const eventName = event.name;
     const eventDate = event.date;
     const eventTime = event.time;
     const eventLocation = event.location;
     const eventDescription = event.description;
-
     const additionalAttendees = req.body.additionalAttendees;
 
     if (additionalAttendees) {
@@ -225,7 +211,6 @@ app.post('/events/:id/send-email', async (req, res) => {
   });
 });
 
-// Update - Show the form to edit an existing event
 app.get('/events/:id/edit', (req, res) => {
   const eventId = req.params.id;
 
@@ -255,7 +240,6 @@ app.get('/events/:id/edit', (req, res) => {
   });
 });
 
-// Update - Handle the form submission for editing an existing event
 app.put('/events/:id', upload.single('eventImage'), (req, res) => {
   const eventId = req.params.id;
   const { name, date, time, location, description } = req.body;
@@ -271,7 +255,6 @@ app.put('/events/:id', upload.single('eventImage'), (req, res) => {
         return;
       }
 
-      // Update the image file name in the event_images table
       connection.query(
         'UPDATE event_images SET image = ? WHERE event_id = ?',
         [eventImage, eventId],
@@ -289,11 +272,9 @@ app.put('/events/:id', upload.single('eventImage'), (req, res) => {
   );
 });
 
-// Delete - Delete an existing event
 app.delete('/events/:id', (req, res) => {
   const eventId = req.params.id;
 
-  // Fetch image information to delete the corresponding file from the uploads folder
   connection.query('SELECT image FROM event_images WHERE event_id = ?', [eventId], (err, results) => {
     if (err) {
       console.error('Error fetching image details:', err);
@@ -303,7 +284,6 @@ app.delete('/events/:id', (req, res) => {
 
     const image = results.length > 0 ? results[0].image : null;
 
-    // Delete event from events table
     connection.query('DELETE FROM events WHERE id = ?', [eventId], (err) => {
       if (err) {
         console.error('Error deleting event:', err);
@@ -311,7 +291,6 @@ app.delete('/events/:id', (req, res) => {
         return;
       }
 
-      // Delete image details from event_images table
       connection.query('DELETE FROM event_images WHERE event_id = ?', [eventId], (err) => {
         if (err) {
           console.error('Error deleting image details:', err);
@@ -319,7 +298,6 @@ app.delete('/events/:id', (req, res) => {
           return;
         }
 
-        // If an image is associated, delete the file from the uploads folder
         if (image) {
           const imagePath = path.join(__dirname, 'uploads', image);
 

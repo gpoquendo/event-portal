@@ -1,5 +1,3 @@
-<!-- views/new.ejs -->
-
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -10,7 +8,6 @@
       content="default-src 'self'; style-src 'self' 'unsafe-inline' https://stackpath.bootstrapcdn.com;"
     />
     <title>Create New Event</title>
-    <!-- Add Bootstrap CSS link -->
     <link
       rel="stylesheet"
       href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
@@ -88,15 +85,8 @@
         <div class="form-group">
           <!-- Field for additional attendees -->
           <label for="additionalAttendees"
-            >Event Attendees (comma-separated emails):</label
+            >Event Attendees (separate emails with comma):</label
           >
-          <!--
-            <input
-            type="text"
-            id="additionalAttendees"
-            name="additionalAttendees"
-          />
-          -->
           <div class="input-group mb-3">
             <span class="input-group-text" id="inputGroup-sizing-default"
               >Email Addresses</span
@@ -113,8 +103,8 @@
         </div>
 
         <button type="submit" class="btn btn-primary">Create Event</button>
+        <a href="/">Back to Event List</a>
       </form>
-      <a href="/">Back to Event List</a>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
