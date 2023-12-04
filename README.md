@@ -23,6 +23,6 @@ This project is a server-side event management system for a local community cent
 ## Installation and Usage
 
 1. Install Node.js and the necessary packages.
-2. Create the database and tables in MySQL server (SQL files included).
+2. Create the database and tables in MySQL server (use `scripts.sql`).
 3. Update the `config.js` file with the appropriate information.
 4. Run the application in the terminal using `npm start`.
